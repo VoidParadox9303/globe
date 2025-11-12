@@ -13,7 +13,7 @@
         }
         
         body {
-            background: linear-gradient(135deg, #1a2a6c, #b21f1f, #fdbb2d);
+            background: linear-gradient(135deg, #0c2461, #1e3799, #4a69bd);
             color: #333;
             min-height: 100vh;
             padding: 20px;
@@ -22,14 +22,14 @@
         .container {
             max-width: 1200px;
             margin: 0 auto;
-            background-color: rgba(255, 255, 255, 0.95);
+            background-color: rgba(255, 255, 255, 0.97);
             border-radius: 15px;
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.2);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
             overflow: hidden;
         }
         
         header {
-            background: linear-gradient(to right, #1a2a6c, #0047ab);
+            background: linear-gradient(to right, #0c2461, #1e3799);
             color: white;
             padding: 25px 30px;
             text-align: center;
@@ -50,7 +50,7 @@
         
         .logo-icon {
             background-color: white;
-            color: #0047ab;
+            color: #1e3799;
             width: 50px;
             height: 50px;
             border-radius: 50%;
@@ -79,15 +79,15 @@
         }
         
         .info-section {
-            background-color: #f0f7ff;
+            background-color: #f8fbff;
             border-radius: 10px;
             padding: 20px;
             margin-bottom: 25px;
-            border-left: 5px solid #0047ab;
+            border-left: 5px solid #1e3799;
         }
         
         .info-section h2 {
-            color: #0047ab;
+            color: #1e3799;
             margin-bottom: 15px;
             font-size: 1.5rem;
         }
@@ -108,16 +108,18 @@
             background-color: white;
             border-radius: 8px;
             padding: 15px;
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.08);
-            transition: transform 0.3s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.05);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+            border-top: 3px solid #4a69bd;
         }
         
         .info-card:hover {
             transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
         }
         
         .info-card h3 {
-            color: #0047ab;
+            color: #1e3799;
             margin-bottom: 10px;
             font-size: 1.2rem;
         }
@@ -133,8 +135,9 @@
             height: 600px;
             border-radius: 10px;
             overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
             margin-top: 20px;
+            border: 1px solid #eaeaea;
         }
         
         iframe {
@@ -149,7 +152,7 @@
             left: 0;
             width: 100%;
             height: 100%;
-            background-color: #f5f5f5;
+            background-color: #f8fbff;
             display: flex;
             flex-direction: column;
             align-items: center;
@@ -160,8 +163,8 @@
         .spinner {
             width: 50px;
             height: 50px;
-            border: 5px solid rgba(0, 71, 171, 0.2);
-            border-top: 5px solid #0047ab;
+            border: 5px solid rgba(30, 55, 153, 0.2);
+            border-top: 5px solid #1e3799;
             border-radius: 50%;
             animation: spin 1s linear infinite;
             margin-bottom: 15px;
@@ -175,8 +178,8 @@
         footer {
             text-align: center;
             padding: 20px;
-            background-color: #f8f9fa;
-            color: #666;
+            background-color: #f8fbff;
+            color: #555;
             font-size: 0.9rem;
             border-top: 1px solid #eaeaea;
         }
@@ -242,7 +245,7 @@
                 </div>
             </div>
             
-            <h2 style="margin-bottom: 15px; color: #0047ab;">Globe SIM Registration Portal</h2>
+            <h2 style="margin-bottom: 15px; color: #1e3799;">Globe SIM Registration Portal</h2>
             <p style="margin-bottom: 20px;">The official Globe SIM registration portal is loaded below. Please complete your registration following the instructions on the page.</p>
             
             <div class="iframe-container">
