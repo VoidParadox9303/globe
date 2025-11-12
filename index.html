@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Globe SIM Registration Portal</title>
+    <title>RAIN 101 Device | Globe Telecom</title>
     <style>
         * {
             margin: 0;
@@ -129,50 +129,85 @@
             color: #555;
         }
         
-        .iframe-container {
-            position: relative;
-            width: 100%;
-            height: 600px;
-            border-radius: 10px;
-            overflow: hidden;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
-            margin-top: 20px;
-            border: 1px solid #eaeaea;
-        }
-        
-        iframe {
-            width: 100%;
-            height: 100%;
-            border: none;
-        }
-        
-        .loading {
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-color: #f8fbff;
+        .device-showcase {
             display: flex;
-            flex-direction: column;
+            flex-wrap: wrap;
+            gap: 30px;
+            margin: 30px 0;
             align-items: center;
+        }
+        
+        .device-image {
+            flex: 1;
+            min-width: 300px;
+            background: linear-gradient(135deg, #f8fbff, #e6f0ff);
+            border-radius: 10px;
+            padding: 20px;
+            display: flex;
             justify-content: center;
-            z-index: 10;
+            align-items: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.08);
         }
         
-        .spinner {
-            width: 50px;
-            height: 50px;
-            border: 5px solid rgba(30, 55, 153, 0.2);
-            border-top: 5px solid #1e3799;
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 15px;
+        .device-placeholder {
+            width: 100%;
+            height: 250px;
+            background-color: #1e3799;
+            border-radius: 8px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 1.5rem;
+            font-weight: bold;
         }
         
-        @keyframes spin {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
+        .device-details {
+            flex: 1;
+            min-width: 300px;
+        }
+        
+        .specs-list {
+            list-style-type: none;
+            margin-top: 15px;
+        }
+        
+        .specs-list li {
+            padding: 8px 0;
+            border-bottom: 1px solid #eee;
+            display: flex;
+        }
+        
+        .specs-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .spec-label {
+            font-weight: bold;
+            color: #1e3799;
+            min-width: 150px;
+        }
+        
+        .spec-value {
+            color: #555;
+        }
+        
+        .cta-button {
+            display: inline-block;
+            background: linear-gradient(to right, #1e3799, #4a69bd);
+            color: white;
+            padding: 12px 25px;
+            border-radius: 5px;
+            text-decoration: none;
+            font-weight: bold;
+            margin-top: 15px;
+            transition: all 0.3s ease;
+            box-shadow: 0 3px 10px rgba(30, 55, 153, 0.3);
+        }
+        
+        .cta-button:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(30, 55, 153, 0.4);
         }
         
         footer {
@@ -193,8 +228,8 @@
                 padding: 20px;
             }
             
-            .iframe-container {
-                height: 500px;
+            .device-showcase {
+                flex-direction: column;
             }
         }
         
@@ -206,10 +241,6 @@
             .content {
                 padding: 15px;
             }
-            
-            .iframe-container {
-                height: 400px;
-            }
         }
     </style>
 </head>
@@ -219,59 +250,100 @@
             <div class="logo-container">
                 <div class="logo">Globe</div>
             </div>
-            <h1>SIM Registration Portal</h1>
-            <p class="subtitle">Register your SIM card in compliance with the SIM Registration Act. Secure your mobile number and continue enjoying Globe's services.</p>
+            <h1>RAIN 101 Device</h1>
+            <p class="subtitle">Advanced connectivity solution for reliable communication in any environment</p>
         </header>
         
         <div class="content">
             <div class="info-section">
-                <h2>About SIM Registration</h2>
-                <p>The SIM Registration Act requires all mobile users to register their SIM cards with their respective telecommunications providers. This helps enhance security and prevent mobile-related crimes.</p>
+                <h2>About the RAIN 101 Device</h2>
+                <p>The RAIN 101 is a state-of-the-art communication device designed to provide reliable connectivity in challenging environments. Utilizing advanced technology, it ensures seamless communication even in remote locations or adverse weather conditions.</p>
                 
                 <div class="info-grid">
                     <div class="info-card">
-                        <h3>Why Register?</h3>
-                        <p>Registration ensures your mobile number remains active and helps protect you from fraud and unauthorized SIM use.</p>
+                        <h3>Reliable Connectivity</h3>
+                        <p>Maintain stable connections with advanced signal processing technology that adapts to environmental conditions.</p>
                     </div>
                     <div class="info-card">
-                        <h3>What You Need</h3>
-                        <p>Prepare a valid government-issued ID and ensure your personal information is up to date before registration.</p>
+                        <h3>Extended Range</h3>
+                        <p>Experience wider coverage with enhanced transmission capabilities that outperform standard devices.</p>
                     </div>
                     <div class="info-card">
-                        <h3>Registration Deadline</h3>
-                        <p>Make sure to register before the deadline to avoid deactivation of your mobile services.</p>
+                        <h3>Weather Resistant</h3>
+                        <p>Built to withstand harsh weather conditions, ensuring consistent performance when you need it most.</p>
                     </div>
                 </div>
             </div>
             
-            <h2 style="margin-bottom: 15px; color: #1e3799;">Globe SIM Registration Portal</h2>
-            <p style="margin-bottom: 20px;">The official Globe SIM registration portal is loaded below. Please complete your registration following the instructions on the page.</p>
-            
-            <div class="iframe-container">
-                <div class="loading">
-                    <div class="spinner"></div>
-                    <p>Loading Globe SIM Registration Portal...</p>
+            <div class="device-showcase">
+                <div class="device-image">
+                    <div class="device-placeholder">
+                        RAIN 101
+                    </div>
                 </div>
-                <iframe src="https://simreg.globe.com.ph/" title="Globe SIM Registration" id="simreg-frame"></iframe>
+                <div class="device-details">
+                    <h2 style="color: #1e3799; margin-bottom: 15px;">Device Specifications</h2>
+                    <ul class="specs-list">
+                        <li>
+                            <span class="spec-label">Model:</span>
+                            <span class="spec-value">RAIN 101</span>
+                        </li>
+                        <li>
+                            <span class="spec-label">Connectivity:</span>
+                            <span class="spec-value">4G/LTE, Wi-Fi 6, Bluetooth 5.2</span>
+                        </li>
+                        <li>
+                            <span class="spec-label">Battery Life:</span>
+                            <span class="spec-value">Up to 48 hours continuous use</span>
+                        </li>
+                        <li>
+                            <span class="spec-label">Operating Temp:</span>
+                            <span class="spec-value">-20°C to 60°C</span>
+                        </li>
+                        <li>
+                            <span class="spec-label">Water Resistance:</span>
+                            <span class="spec-value">IP67 Rated</span>
+                        </li>
+                        <li>
+                            <span class="spec-label">Dimensions:</span>
+                            <span class="spec-value">150mm x 80mm x 25mm</span>
+                        </li>
+                        <li>
+                            <span class="spec-label">Weight:</span>
+                            <span class="spec-value">350g</span>
+                        </li>
+                    </ul>
+                    
+                    <a href="#" class="cta-button">Purchase RAIN 101</a>
+                    <a href="#" class="cta-button" style="background: linear-gradient(to right, #4a69bd, #6a89cc); margin-left: 10px;">Technical Documentation</a>
+                </div>
+            </div>
+            
+            <div class="info-section">
+                <h2>Applications</h2>
+                <p>The RAIN 101 device is versatile enough to serve multiple industries and use cases:</p>
+                
+                <div class="info-grid">
+                    <div class="info-card">
+                        <h3>Emergency Services</h3>
+                        <p>Reliable communication for first responders during critical situations and natural disasters.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Remote Operations</h3>
+                        <p>Maintain connectivity in mining, agriculture, and other remote industrial applications.</p>
+                    </div>
+                    <div class="info-card">
+                        <h3>Maritime Use</h3>
+                        <p>Stable communication for vessels and offshore operations where traditional signals fail.</p>
+                    </div>
+                </div>
             </div>
         </div>
         
         <footer>
-            <p>This page integrates the official Globe SIM Registration Portal. For assistance, contact Globe customer service.</p>
+            <p>For technical support or inquiries about the RAIN 101 device, contact Globe Business Solutions.</p>
             <p>© 2025 Globe Telecom, Inc. All Rights Reserved.</p>
         </footer>
     </div>
-
-    <script>
-        // Hide loading spinner once iframe is loaded
-        document.getElementById('simreg-frame').addEventListener('load', function() {
-            document.querySelector('.loading').style.display = 'none';
-        });
-        
-        // Fallback: hide loading spinner after 5 seconds regardless
-        setTimeout(function() {
-            document.querySelector('.loading').style.display = 'none';
-        }, 5000);
-    </script>
 </body>
 </html>
