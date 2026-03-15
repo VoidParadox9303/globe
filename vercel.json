@@ -1,0 +1,5 @@
+{
+  "rewrites": [
+    { "source": "/:channel", "destination": "/player.html" }
+  ]
+}
