@@ -9,7 +9,7 @@
   <script src="https://cdn.tailwindcss.com"></script>
   <!-- Lucide icons -->
   <script src="https://unpkg.com/lucide@latest"></script>
-  <!-- Shaka Player and UI (v4.7 – more stable) -->
+  <!-- Shaka Player and UI (v4.7.11) -->
   <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.7.11/dist/shaka-player.compiled.js"></script>
   <script src="https://cdn.jsdelivr.net/npm/shaka-player@4.7.11/dist/shaka-player.ui.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/shaka-player@4.7.11/dist/controls.css" />
@@ -29,11 +29,7 @@
       -webkit-text-fill-color: transparent;
     }
     .pb-safe { padding-bottom: env(safe-area-inset-bottom); }
-    .shaka-video-container {
-      width: 100%;
-      height: 100%;
-    }
-    /* Error message styling */
+    .shaka-video-container { width: 100%; height: 100%; }
     .error-message {
       background: rgba(239, 68, 68, 0.2);
       border: 1px solid #ef4444;
@@ -42,6 +38,15 @@
       border-radius: 0.5rem;
       margin-top: 1rem;
       text-align: center;
+    }
+    .info-message {
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid #3b82f6;
+      color: #3b82f6;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -101,7 +106,7 @@
       <div class="container mx-auto px-4">
         <!-- Back link -->
         <div class="py-3">
-          <a href="/live-tv" class="inline-flex items-center gap-2 text-sm hover:bg-accent rounded-md px-3 py-2">
+          <a href="/" class="inline-flex items-center gap-2 text-sm hover:bg-accent rounded-md px-3 py-2">
             <i data-lucide="chevron-left" class="w-4 h-4"></i>Back to Live TV
           </a>
         </div>
@@ -119,17 +124,18 @@
             </div>
           </div>
 
-          <!-- Video player container with Shaka UI -->
+          <!-- Video player container -->
           <div class="aspect-video w-full rounded-xl overflow-hidden bg-card border border-border relative">
             <div id="shaka-container" class="shaka-video-container w-full h-full" data-shaka-player-container>
               <video id="video-player" class="shaka-video w-full h-full" autoplay playsinline muted></video>
             </div>
           </div>
 
-          <!-- Error display (hidden by default) -->
+          <!-- Error display -->
           <div id="error-message" class="error-message hidden"></div>
+          <div id="info-message" class="info-message hidden"></div>
 
-          <!-- Proxy info -->
+          <!-- Proxy info (optional) -->
           <div class="flex items-center gap-1.5 mt-2 px-1">
             <i data-lucide="shield" class="w-3.5 h-3.5 text-muted-foreground"></i>
             <span class="text-xs text-muted-foreground">Proxy: <span class="font-medium text-accent-foreground">Backup 5</span></span>
@@ -172,7 +178,7 @@
   </nav>
 </div>
 
-<!-- PopAds script (optional, may be blocked) -->
+<!-- PopAds script (optional) -->
 <script type="text/javascript" data-cfasync="false">
 /*<![CDATA[/* */
 (function(){var f=window,v="c9b6cb59c84ff56aa7ad154505a16417",l=[["siteId",517*483*638*64-190-10190940443],["minBid",0],["popundersPerIP","0"],["delayBetween",0],["default",false],["defaultPerDay",0],["topmostLayer","auto"]],n=["d3d3LnZpc2FyaW9tZWRpYS5jb20vdm1tZW51LmNzcw==","ZDEzazdwcmF4MXlpMDQuY2xvdWRmcm9udC5uZXQvRkZPa3IvamZvcmNlLm1pbi5qcw==","d3d3LmpwcWZ5dG96dG8uY29tL2RtbWVudS5jc3M=","d3d3LnViY3dhaGNrdi5jb20vYXdOUkN3L3Vmb3JjZS5taW4uanM="],x=-1,y,r,d=function(){clearTimeout(r);x++;if(n[x]&&!(1795322995000<(new Date).getTime()&&1<x)){y=f.document.createElement("script");y.type="text/javascript";y.async=!0;var t=f.document.getElementsByTagName("script")[0];y.src="https://"+atob(n[x]);y.crossOrigin="anonymous";y.onerror=d;y.onload=function(){clearTimeout(r);f[v.slice(0,16)+v.slice(0,16)]||d()};r=setTimeout(d,5E3);t.parentNode.insertBefore(y,t)}};if(!f[v]){try{Object.freeze(f[v]=l)}catch(e){}d()}})();
@@ -180,25 +186,129 @@
 </script>
 
 <script>
-  // Get URL parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  const name = urlParams.get('name') || 'Channel';
-  const logo = urlParams.get('logo') || '';
-  const manifestUri = urlParams.get('url') || '';
-  const licenseKey = urlParams.get('key') || '';
-
-  document.getElementById('channel-name').textContent = name;
-  document.getElementById('channel-logo').src = logo;
-
   // Helper to show errors
   function showError(message) {
     const errorDiv = document.getElementById('error-message');
     errorDiv.textContent = message;
     errorDiv.classList.remove('hidden');
+    document.getElementById('info-message').classList.add('hidden');
   }
 
-  // Initialize Shaka Player
-  async function initPlayer() {
+  function showInfo(message) {
+    const infoDiv = document.getElementById('info-message');
+    infoDiv.textContent = message;
+    infoDiv.classList.remove('hidden');
+  }
+
+  // ----- M3U PARSER (handles your exact format) -----
+  function parseM3U(m3u) {
+    const lines = m3u.split('\n');
+    const channels = [];
+    let current = {};
+
+    lines.forEach(line => {
+      line = line.trim();
+      // Skip empty lines and lines that are not #EXTINF or license keys
+      if (line === '' || line.startsWith('#EXTM3U') || line.startsWith('***') || line.startsWith('#KODIPROP') || line.includes('group-logo=')) {
+        return;
+      }
+
+      if (line.startsWith('#EXTINF:')) {
+        const logoMatch = line.match(/tvg-logo="([^"]+)"/);
+        const nameMatch = line.match(/,(.+)$/);
+        const groupMatch = line.match(/group-title="([^"]+)"/);
+        current.logo = logoMatch ? logoMatch[1] : '';
+        current.name = nameMatch ? nameMatch[1].trim() : 'Unknown';
+        current.group = groupMatch ? groupMatch[1] : '';
+        // Generate URL-friendly ID from channel name
+        current.id = current.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
+      } else if (line.startsWith('#KODIPROP:inputstream.adaptive.license_key')) {
+        const keyMatch = line.match(/license_key=([a-f0-9:]+)/);
+        if (keyMatch) current.licenseKey = keyMatch[1];
+      } else if (line.startsWith('http') && current.name) {
+        current.url = line;
+        channels.push({ ...current });
+        current = {};
+      }
+    });
+    return channels;
+  }
+
+  // ----- LOAD CHANNELS AND INIT PAGE -----
+  async function loadChannels() {
+    try {
+      // In production, you should fetch('/playlist.m3u') instead of embedding
+      const m3uText = `#EXTM3U billed-msg="M3U PLAYLIST BY: RYANSNETCAFE"
+#EXTM3U url-tvg="https://epgshare01.online/epgshare01/epg_ripper_PH1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_PH2.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_ID1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_MY1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_HK1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_US1.xml.gz"
+
+**********Cignal-TV**********
+
+#EXTINF:-1 group-logo="https://i.imgur.com/31e7xew.png"
+
+#EXTINF:-1 tvg-id="" tvg-logo="https://divign0fdw3sv.cloudfront.net/Images/ChannelLogo/contenthub/449_144.png" channel-number="1" group-title="Cignal", HBO Hits
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=dash 
+#KODIPROP:inputstream.adaptive.license_type=org.w3.clearkey
+#KODIPROP:inputstream.adaptive.license_key=b04ae8017b5b4601a5a0c9060f6d5b7d:a8795f3bdb8a4778b7e888ee484cc7a1
+https://tiny-sky-b9fd.v32k84wntwbguzg6hf4tkrsq.workers.dev/?url=https://qp-pldt-live-bpk-02-prod.akamaized.net/bpk-tv/cg_hbohits/default/index.mpd
+
+#EXTINF:-1 tvg-id="" tvg-logo="https://i.imgur.com/pRwyOMP.png" group-title="Local", A2Z
+https://example.com/stream.mpd
+`;
+
+      const allChannels = parseM3U(m3uText);
+      console.log('Parsed channels:', allChannels);
+
+      // Get channel ID from URL path (e.g., "/hbo-hits" → "hbo-hits")
+      const path = window.location.pathname;
+      const channelId = path.startsWith('/') ? path.substring(1) : path;
+      console.log('Requested channel ID:', channelId);
+
+      const channel = allChannels.find(ch => ch.id === channelId);
+      if (!channel) {
+        showError(`Channel "${channelId}" not found. Available: ${allChannels.map(c => c.id).join(', ')}`);
+        return;
+      }
+
+      // Set channel info
+      document.getElementById('channel-name').textContent = channel.name;
+      document.getElementById('channel-logo').src = channel.logo;
+
+      if (!channel.url) {
+        showError('Channel has no stream URL.');
+        return;
+      }
+
+      // Use the URL directly (it already includes the proxy if needed)
+      const finalManifestUri = channel.url;
+      console.log('Final manifest URL:', finalManifestUri);
+
+      // Initialize player
+      initPlayer(finalManifestUri, channel.licenseKey);
+
+      // Populate other channels
+      const otherContainer = document.getElementById('other-channels');
+      otherContainer.innerHTML = '';
+      allChannels.filter(ch => ch.id !== channelId).forEach(ch => {
+        const btn = document.createElement('a');
+        btn.href = `/${ch.id}`;
+        btn.className = 'flex flex-col items-center p-2 rounded-lg bg-background border border-border hover:border-primary/50 hover:bg-accent/50 transition-all duration-200 group';
+        btn.innerHTML = `
+          <img src="${ch.logo}" alt="${ch.name}" class="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-md bg-secondary/50 p-1">
+          <p class="font-medium text-[9px] sm:text-[10px] group-hover:text-primary transition-colors text-center mt-1.5 line-clamp-1 w-full">${ch.name}</p>
+        `;
+        otherContainer.appendChild(btn);
+      });
+
+      lucide.createIcons();
+    } catch (error) {
+      console.error('Failed to load playlist:', error);
+      showError('Could not load channel list. Please try again later.');
+    }
+  }
+
+  // ----- SHAKA PLAYER INITIALIZATION -----
+  async function initPlayer(manifestUri, licenseKey) {
     shaka.polyfill.installAll();
     if (!shaka.Player.isBrowserSupported()) {
       showError('Shaka Player not supported in this browser.');
@@ -210,28 +320,37 @@
 
     // Configure ClearKey if license key is present
     if (licenseKey) {
-      const [keyId, key] = licenseKey.split(':');
-      const config = {
-        drm: {
-          clearKeys: {
-            [keyId]: key
+      try {
+        const [keyId, key] = licenseKey.split(':');
+        const config = {
+          drm: {
+            clearKeys: {
+              [keyId]: key
+            }
           }
-        }
-      };
-      player.configure(config);
+        };
+        player.configure(config);
+        console.log('ClearKey configured');
+      } catch (e) {
+        console.warn('Invalid license key format, playing without DRM config');
+      }
     }
 
     // Listen for errors
     player.addEventListener('error', (e) => {
-      showError('Playback error: ' + e.detail.message);
+      const error = e.detail;
+      if (error.code === 6012) {
+        showError('License request failed (Error 6012). This usually means the stream uses a different DRM (like Widevine) or the proxy is blocking the license request. Try disabling the proxy or using a different stream.');
+      } else {
+        showError('Playback error: ' + error.message);
+      }
     });
 
     try {
-      // Load the manifest first (do NOT attach UI before loading)
       await player.load(manifestUri);
       console.log('Stream loaded successfully');
 
-      // Now attach the UI after the manifest is ready
+      // Attach UI after manifest is ready
       const uiContainer = document.getElementById('shaka-container');
       const ui = new shaka.ui.Overlay(player, uiContainer, video);
       const uiConfig = {
@@ -240,78 +359,17 @@
       };
       ui.configure(uiConfig);
     } catch (e) {
-      showError('Failed to load stream: ' + e.message);
+      if (e.code === 6012) {
+        showError('License request failed (Error 6012). This usually means the stream uses a different DRM (like Widevine) or the proxy is blocking the license request. Try disabling the proxy or using a different stream.');
+      } else {
+        showError('Failed to load stream: ' + e.message);
+      }
       console.error(e);
     }
   }
 
-  if (manifestUri) {
-    initPlayer();
-  } else {
-    showError('No stream URL provided.');
-  }
-
-  // Populate other channels (using same M3U parsing as index)
-  const m3uText = `#EXTM3U url-tvg="..."
-#EXTINF:-1 tvg-id="" tvg-logo="https://divign0fdw3sv.cloudfront.net/Images/ChannelLogo/contenthub/449_144.png" group-title="Cignal", HBO Hits
-#KODIPROP:inputstreamaddon=inputstream.adaptive
-#KODIPROP:inputstream.adaptive.manifest_type=dash 
-#KODIPROP:inputstream.adaptive.license_type=org.w3.clearkey
-#KODIPROP:inputstream.adaptive.license_key=b04ae8017b5b4601a5a0c9060f6d5b7d:a8795f3bdb8a4778b7e888ee484cc7a1
-https://tiny-sky-b9fd.v32k84wntwbguzg6hf4tkrsq.workers.dev/?url=https://qp-pldt-live-bpk-02-prod.akamaized.net/bpk-tv/cg_hbohits/default/index.mpd
-
-#EXTINF:-1 tvg-id="" tvg-logo="https://i.imgur.com/pRwyOMP.png" group-title="Local", A2Z
-https://example.com/stream.mpd
-`;
-
-  function parseM3U(m3u) {
-    const lines = m3u.split('\n');
-    const channels = [];
-    let current = {};
-
-    lines.forEach(line => {
-      line = line.trim();
-      if (line.startsWith('#EXTINF:')) {
-        const logoMatch = line.match(/tvg-logo="([^"]+)"/);
-        const nameMatch = line.match(/,(.+)$/);
-        const groupMatch = line.match(/group-title="([^"]+)"/);
-        current.logo = logoMatch ? logoMatch[1] : '';
-        current.name = nameMatch ? nameMatch[1].trim() : 'Unknown';
-        current.group = groupMatch ? groupMatch[1] : '';
-      } else if (line.startsWith('#KODIPROP:inputstream.adaptive.license_key')) {
-        const keyMatch = line.match(/license_key=([a-f0-9:]+)/);
-        if (keyMatch) current.licenseKey = keyMatch[1];
-      } else if (line.startsWith('http') && !line.includes('#') && current.name) {
-        current.url = line;
-        channels.push({ ...current });
-        current = {};
-      }
-    });
-    return channels;
-  }
-
-  const allChannels = parseM3U(m3uText);
-  const otherContainer = document.getElementById('other-channels');
-  const currentUrl = manifestUri;
-
-  allChannels.filter(ch => ch.url !== currentUrl).forEach(ch => {
-    const params = new URLSearchParams({
-      name: ch.name,
-      logo: ch.logo,
-      url: ch.url,
-      key: ch.licenseKey || ''
-    }).toString();
-    const btn = document.createElement('a');
-    btn.href = `player.html?${params}`;
-    btn.className = 'flex flex-col items-center p-2 rounded-lg bg-background border border-border hover:border-primary/50 hover:bg-accent/50 transition-all duration-200 group';
-    btn.innerHTML = `
-      <img src="${ch.logo}" alt="${ch.name}" class="w-8 h-8 sm:w-10 sm:h-10 object-contain rounded-md bg-secondary/50 p-1">
-      <p class="font-medium text-[9px] sm:text-[10px] group-hover:text-primary transition-colors text-center mt-1.5 line-clamp-1 w-full">${ch.name}</p>
-    `;
-    otherContainer.appendChild(btn);
-  });
-
-  lucide.createIcons();
+  // Start the process
+  loadChannels();
 
   // Theme toggle
   const toggle = document.getElementById('theme-toggle');
