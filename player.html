@@ -38,6 +38,16 @@
       border-radius: 0.5rem;
       margin-top: 1rem;
       text-align: center;
+      white-space: pre-wrap;
+    }
+    .info-message {
+      background: rgba(59, 130, 246, 0.2);
+      border: 1px solid #3b82f6;
+      color: #3b82f6;
+      padding: 0.75rem;
+      border-radius: 0.5rem;
+      margin-top: 1rem;
+      font-size: 0.9rem;
     }
   </style>
 </head>
@@ -124,6 +134,7 @@
 
           <!-- Error display -->
           <div id="error-message" class="error-message hidden"></div>
+          <div id="info-message" class="info-message hidden"></div>
 
           <!-- Proxy info -->
           <div class="flex items-center gap-1.5 mt-2 px-1">
@@ -184,9 +195,16 @@
     const errorDiv = document.getElementById('error-message');
     errorDiv.textContent = message;
     errorDiv.classList.remove('hidden');
+    document.getElementById('info-message').classList.add('hidden');
   }
 
-  // ----- M3U PARSER -----
+  function showInfo(message) {
+    const infoDiv = document.getElementById('info-message');
+    infoDiv.textContent = message;
+    infoDiv.classList.remove('hidden');
+  }
+
+  // ----- M3U PARSER (embedded for reliability) -----
   function parseM3U(m3u) {
     const lines = m3u.split('\n');
     const channels = [];
@@ -194,8 +212,9 @@
 
     lines.forEach(line => {
       line = line.trim();
-      // Skip empty lines, comments that are not #EXTINF, and group logos
-      if (line === '' || line.startsWith('#EXTM3U') || line.startsWith('***') || line.startsWith('#KODIPROP') || line.startsWith('#EXTINF:-1 group-logo')) return;
+      if (line === '' || line.startsWith('#EXTM3U') || line.startsWith('***') || line.startsWith('#KODIPROP') || line.includes('group-logo=')) {
+        return;
+      }
 
       if (line.startsWith('#EXTINF:')) {
         const logoMatch = line.match(/tvg-logo="([^"]+)"/);
@@ -204,12 +223,11 @@
         current.logo = logoMatch ? logoMatch[1] : '';
         current.name = nameMatch ? nameMatch[1].trim() : 'Unknown';
         current.group = groupMatch ? groupMatch[1] : '';
-        // Generate URL-friendly ID from channel name
         current.id = current.name.toLowerCase().replace(/[^a-z0-9]+/g, '-');
       } else if (line.startsWith('#KODIPROP:inputstream.adaptive.license_key')) {
         const keyMatch = line.match(/license_key=([a-f0-9:]+)/);
         if (keyMatch) current.licenseKey = keyMatch[1];
-      } else if (line.startsWith('http') && !line.includes('#') && current.name) {
+      } else if (line.startsWith('http') && current.name) {
         current.url = line;
         channels.push({ ...current });
         current = {};
@@ -221,32 +239,56 @@
   // ----- LOAD CHANNELS AND INIT PAGE -----
   async function loadChannels() {
     try {
-      const response = await fetch('/playlist.m3u');
-      const m3uText = await response.text();
+      // Embedded M3U (replace with fetch if needed)
+      const m3uText = `#EXTM3U billed-msg="M3U PLAYLIST BY: RYANSNETCAFE"
+#EXTM3U url-tvg="https://epgshare01.online/epgshare01/epg_ripper_PH1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_PH2.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_ID1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_MY1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_HK1.xml.gz, https://epgshare01.online/epgshare01/epg_ripper_US1.xml.gz"
+
+**********Cignal-TV**********
+
+#EXTINF:-1 group-logo="https://i.imgur.com/31e7xew.png"
+
+#EXTINF:-1 tvg-id="" tvg-logo="https://divign0fdw3sv.cloudfront.net/Images/ChannelLogo/contenthub/449_144.png" channel-number="1" group-title="Cignal", HBO Hits
+#KODIPROP:inputstreamaddon=inputstream.adaptive
+#KODIPROP:inputstream.adaptive.manifest_type=dash 
+#KODIPROP:inputstream.adaptive.license_type=org.w3.clearkey
+#KODIPROP:inputstream.adaptive.license_key=b04ae8017b5b4601a5a0c9060f6d5b7d:a8795f3bdb8a4778b7e888ee484cc7a1
+https://qp-pldt-live-bpk-02-prod.akamaized.net/bpk-tv/cg_hbohits/default/index.mpd
+
+#EXTINF:-1 tvg-id="" tvg-logo="https://i.imgur.com/pRwyOMP.png" group-title="Local", A2Z
+https://example.com/stream.mpd
+`;
+
       const allChannels = parseM3U(m3uText);
+      console.log('Parsed channels:', allChannels);
 
       // Get channel ID from URL path
-      const path = window.location.pathname; // e.g., "/hbo-hits"
+      const path = window.location.pathname;
       const channelId = path.startsWith('/') ? path.substring(1) : path;
+      console.log('Requested channel ID:', channelId);
 
       const channel = allChannels.find(ch => ch.id === channelId);
       if (!channel) {
-        showError('Channel not found in playlist.');
+        showError(`Channel "${channelId}" not found. Available: ${allChannels.map(c => c.id).join(', ')}`);
         return;
       }
 
-      // Set channel info
       document.getElementById('channel-name').textContent = channel.name;
       document.getElementById('channel-logo').src = channel.logo;
 
-      // Build proxied manifest URL
-      const proxiedManifestUri = PROXY_BASE + encodeURIComponent(channel.url);
+      if (!channel.url) {
+        showError('Channel has no stream URL.');
+        return;
+      }
 
-      // Initialize player
+      const proxiedManifestUri = PROXY_BASE + encodeURIComponent(channel.url);
+      console.log('Proxied URL:', proxiedManifestUri);
+
+      // Initialize player with license key if present
       initPlayer(proxiedManifestUri, channel.licenseKey);
 
-      // Populate other channels (excluding current)
+      // Populate other channels
       const otherContainer = document.getElementById('other-channels');
+      otherContainer.innerHTML = '';
       allChannels.filter(ch => ch.id !== channelId).forEach(ch => {
         const btn = document.createElement('a');
         btn.href = `/${ch.id}`;
@@ -278,19 +320,30 @@
 
     // Configure ClearKey if license key is present
     if (licenseKey) {
-      const [keyId, key] = licenseKey.split(':');
-      const config = {
-        drm: {
-          clearKeys: {
-            [keyId]: key
+      try {
+        const [keyId, key] = licenseKey.split(':');
+        const config = {
+          drm: {
+            clearKeys: {
+              [keyId]: key
+            }
           }
-        }
-      };
-      player.configure(config);
+        };
+        player.configure(config);
+        console.log('ClearKey configured');
+      } catch (e) {
+        console.warn('Invalid license key format, playing without DRM config');
+      }
     }
 
+    // Listen for errors
     player.addEventListener('error', (e) => {
-      showError('Playback error: ' + e.detail.message);
+      const error = e.detail;
+      if (error.code === 6012) {
+        showError('License request failed (Error 6012). This usually means the stream uses a different DRM (like Widevine) or the proxy is blocking the license request. Try disabling the proxy or using a different stream.');
+      } else {
+        showError('Playback error: ' + error.message);
+      }
     });
 
     try {
@@ -306,7 +359,11 @@
       };
       ui.configure(uiConfig);
     } catch (e) {
-      showError('Failed to load stream: ' + e.message);
+      if (e.code === 6012) {
+        showError('License request failed (Error 6012). This usually means the stream uses a different DRM (like Widevine) or the proxy is blocking the license request. Try disabling the proxy or using a different stream.');
+      } else {
+        showError('Failed to load stream: ' + e.message);
+      }
       console.error(e);
     }
   }
