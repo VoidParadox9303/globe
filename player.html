@@ -5,8 +5,8 @@
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
   <title>TVStreamz - Player</title>
   <meta name="theme-color" content="#0a0a0f">
-  <!-- Tailwind -->
-  <script src="https://cdn.tailwindcss.com"></script>
+  <!-- Use a production CDN for Tailwind (or remove warning) -->
+  <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.19/dist/tailwind.min.css" rel="stylesheet">
   <!-- Lucide -->
   <script src="https://unpkg.com/lucide@latest"></script>
   <!-- Shaka Player and UI (v4.7.11) -->
@@ -45,7 +45,7 @@
 <body class="bg-background text-white antialiased">
 
 <div class="pb-16 md:pb-0">
-  <!-- Navbar (same as index) -->
+  <!-- Navbar (same as before) -->
   <nav class="fixed top-0 left-0 right-0 z-50 glass border-b border-border/50">
     <div class="container mx-auto px-4">
       <div class="flex items-center justify-between h-16">
@@ -180,6 +180,11 @@
   let allChannels = [];
   let currentChannel = null;
 
+  // ----- CORS proxy option -----
+  // Set to true to use a proxy for manifest requests (bypass CORS/403)
+  const useProxy = false;  // change to true if needed
+  const proxyUrl = 'https://cors-anywhere.herokuapp.com/';  // example proxy – replace with your own
+
   // ----- Fetch and parse M3U -----
   async function loadChannels() {
     try {
@@ -246,7 +251,7 @@
       errorDiv.classList.remove('hidden');
     }
 
-    // Initialize Shaka Player
+    // Initialize Shaka Player (using modern attach method)
     async function initPlayer() {
       shaka.polyfill.installAll();
       if (!shaka.Player.isBrowserSupported()) {
@@ -255,7 +260,8 @@
       }
 
       const video = document.getElementById('video-player');
-      const player = new shaka.Player(video);
+      const player = new shaka.Player();  // create without video element
+      await player.attach(video);          // attach later (no deprecation warning)
 
       if (currentChannel.licenseKey) {
         const [keyId, key] = currentChannel.licenseKey.split(':');
@@ -273,8 +279,14 @@
         showError('Playback error: ' + e.detail.message);
       });
 
+      // Apply proxy if enabled
+      let manifestUrl = currentChannel.url;
+      if (useProxy && proxyUrl) {
+        manifestUrl = proxyUrl + manifestUrl;
+      }
+
       try {
-        await player.load(currentChannel.url);
+        await player.load(manifestUrl);
         console.log('Stream loaded successfully');
 
         const uiContainer = document.getElementById('shaka-container');
